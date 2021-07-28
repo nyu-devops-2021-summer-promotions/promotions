@@ -43,7 +43,13 @@ Feature: The promotion service back-end
         And I should see "True" in the "Active" dropdown
 
     Scenario: Search all 10%OFF
-
+        When I visit the "Home Page"
+        And I set the "promotion_type" to "10%OFF"
+        And I press the "Search" button
+        Then I should see "New Product" in the results
+        And I should not see "Christmas Sale" in the results
+        And I should not see "Black Friday" in the results
+        And I should not see "Summer Sale" in the results
     Scenario: Update a Promotion
         When I visit the "Home Page"
         And I set the "title" to "Black Friday"
