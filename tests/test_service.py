@@ -9,6 +9,7 @@ Test cases can be run with the following:
 """
 
 import os
+import json
 import logging
 import unittest
 from urllib.parse import quote_plus

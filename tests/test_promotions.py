@@ -7,6 +7,7 @@ While debugging just these tests it's convinient to use this:
     nosetests --stop tests/test_promotionss.py:TestPromotionModel
 """
 import os
+import json
 import logging
 import unittest
 from werkzeug.exceptions import NotFound
