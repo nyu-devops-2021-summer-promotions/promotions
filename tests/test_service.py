@@ -20,7 +20,7 @@ from dateutil import parser
 
 # DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///../db/test.db')
 DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres"
+    "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/testdb"
 )
 BASE_URL = "/promotions"
 CONTENT_TYPE_JSON = "application/json"

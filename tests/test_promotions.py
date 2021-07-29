@@ -16,7 +16,7 @@ from .factories import PromotionFactory
 from dateutil import parser
 
 DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres"
+    "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/testdb"
 )
 
 ######################################################################
