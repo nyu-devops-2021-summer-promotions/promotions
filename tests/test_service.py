@@ -18,10 +18,20 @@ from service.routes import app, init_db
 from .factories import PromotionFactory
 from dateutil import parser
 
-# DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///../db/test.db')
+# # DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///../db/test.db')
+# DATABASE_URI = os.getenv(
+#     "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/testdb"
+# )
+
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/testdb"
 )
+
+# override if we are running in Cloud Foundry
+if 'VCAP_SERVICES' in os.environ:
+    vcap = json.loads(os.environ['VCAP_SERVICES'])
+    DATABASE_URI = vcap['user-provided'][0]['credentials']['url']
+  
 BASE_URL = "/promotions"
 CONTENT_TYPE_JSON = "application/json"
 ######################################################################

@@ -15,9 +15,19 @@ from service import app
 from .factories import PromotionFactory
 from dateutil import parser
 
+# DATABASE_URI = os.getenv(
+#     "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/testdb"
+# )
+
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/testdb"
 )
+
+# override if we are running in Cloud Foundry
+if 'VCAP_SERVICES' in os.environ:
+    vcap = json.loads(os.environ['VCAP_SERVICES'])
+    DATABASE_URI = vcap['user-provided'][0]['credentials']['url']
+  
 
 ######################################################################
 #  P R O M O T I O N   M O D E L   T E S T   C A S E S
