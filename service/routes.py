@@ -15,6 +15,7 @@ import os
 import sys
 import logging
 from flask import Flask, jsonify, request, url_for, make_response, abort
+from flask_restx import Api, Resource, fields, reqparse, inputs
 from . import status  # HTTP Status Codes
 from werkzeug.exceptions import NotFound
 
@@ -35,6 +36,73 @@ from . import app
 def index():
     """ Root URL response """
     return app.send_static_file("index.html")
+
+######################################################################
+# PATH: /promotions/{id}
+######################################################################
+@api.route('/promotions/<promotion_id>')
+@api.param('promotion_id', 'The Promotion identifier')
+class PromotionResource(Resource):
+    """
+    PromotionResource Class
+    
+    Allows manipulation of a single Promotion with id
+    GET /promotion{id} - Returns promotion with given id
+    PUT /promotion{id} - Update promotion with given id
+    DELETE /promotion{id} - Delete promotion with given id
+    """
+######################################################################
+# RETRIEVE A PROMOTION
+######################################################################
+    def get_promotions(self, promotion_id):
+        """
+        Retrieve a single Promotion
+        This endpoint will return a Promotion based on it's id
+        """
+        app.logger.info("Request for promotion with id: %s", promotion_id)
+        promotion = Promotion.find(promotion_id)
+        if not promotion:
+            raise NotFound(
+                "Promotion with id '{}' was not found.".format(promotion_id))
+        return make_response(jsonify(promotion.serialize()), status.HTTP_200_OK)
+
+######################################################################
+# UPDATE AN EXISTING PROMOTION
+######################################################################
+    def update_promotions(self, promotion_id):
+        """
+        Update a Promotion
+        This endpoint will update a Promotion based the body that is posted
+        """
+        app.logger.info("Request to update promotion with id: %s", promotion_id)
+        check_content_type("application/json")
+        promotion = Promotion.find(promotion_id)
+        if not promotion:
+            raise NotFound(
+                "Promotion with id '{}' was not found.".format(promotion_id))
+        promotion.deserialize(request.get_json())
+        promotion.id = promotion_id
+        promotion.update()
+
+        app.logger.info("Promotion with ID [%s] updated.", promotion.id)
+        return make_response(jsonify(promotion.serialize()), status.HTTP_200_OK)
+
+######################################################################
+# DELETE A PROMOTION
+######################################################################
+    def delete_promotions(self, promotion_id):
+        """
+        Delete a Promotion
+        This endpoint will delete a Promotion based the id specified in the path
+        """
+        app.logger.info("Request to delete promotion with id: %s", promotion_id)
+        promotion = Promotion.find(promotion_id)
+        if promotion:
+            promotion.delete()
+
+        app.logger.info("Promotion with ID [%s] delete complete.", promotion_id)
+        return make_response("", status.HTTP_204_NO_CONTENT)
+
 
 ######################################################################
 # LIST ALL PROMOTIONS
@@ -65,23 +133,6 @@ def list_promotions():
     results = [promotion.serialize() for promotion in promotions]
     return make_response(jsonify(results), status.HTTP_200_OK)
 
-######################################################################
-# RETRIEVE A PROMOTION
-######################################################################
-
-
-@app.route("/promotions/<int:promotion_id>", methods=["GET"])
-def get_promotions(promotion_id):
-    """
-    Retrieve a single Promotion
-    This endpoint will return a Promotion based on it's id
-    """
-    app.logger.info("Request for promotion with id: %s", promotion_id)
-    promotion = Promotion.find(promotion_id)
-    if not promotion:
-        raise NotFound(
-            "Promotion with id '{}' was not found.".format(promotion_id))
-    return make_response(jsonify(promotion.serialize()), status.HTTP_200_OK)
 
 ######################################################################
 # ADD A NEW PROMOTION
@@ -106,48 +157,6 @@ def create_promotions():
         jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
     )
 
-######################################################################
-# UPDATE AN EXISTING PROMOTION
-######################################################################
-
-
-@app.route("/promotions/<int:promotion_id>", methods=["PUT"])
-def update_promotions(promotion_id):
-    """
-    Update a Promotion
-    This endpoint will update a Promotion based the body that is posted
-    """
-    app.logger.info("Request to update promotion with id: %s", promotion_id)
-    check_content_type("application/json")
-    promotion = Promotion.find(promotion_id)
-    if not promotion:
-        raise NotFound(
-            "Promotion with id '{}' was not found.".format(promotion_id))
-    promotion.deserialize(request.get_json())
-    promotion.id = promotion_id
-    promotion.update()
-
-    app.logger.info("Promotion with ID [%s] updated.", promotion.id)
-    return make_response(jsonify(promotion.serialize()), status.HTTP_200_OK)
-
-######################################################################
-# DELETE A PROMOTION
-######################################################################
-
-
-@app.route("/promotions/<int:promotion_id>", methods=["DELETE"])
-def delete_promotions(promotion_id):
-    """
-    Delete a Promotion
-    This endpoint will delete a Promotion based the id specified in the path
-    """
-    app.logger.info("Request to delete promotion with id: %s", promotion_id)
-    promotion = Promotion.find(promotion_id)
-    if promotion:
-        promotion.delete()
-
-    app.logger.info("Promotion with ID [%s] delete complete.", promotion_id)
-    return make_response("", status.HTTP_204_NO_CONTENT)
 
 ######################################################################
 # ACTIVATE AN EXISTING PROMOTION
