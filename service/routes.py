@@ -37,6 +37,54 @@ def index():
     return app.send_static_file("index.html")
 
 ######################################################################
+# Configure Swagger before initializing it
+######################################################################
+api = Api(app,
+          version='1.0.0',
+          title='Promotions REST API Service',
+          description='This is a promotions server.',
+          default='promotions',
+          default_label='Promotion operations',
+          doc='/apidocs', # default also could use doc='/apidocs/'
+          authorizations=authorizations,
+          prefix='/api'
+         )
+
+
+# Define the model so that the docs reflect what can be sent
+create_model = api.model('Pet', {
+    'title': fields.String(required=True,
+                          description='The name of the Promotion'),
+    'promotion_type': fields.String(required=True,
+                              description='The type of promotion (Buy one Get one Free)'),
+    'start_date': fields.DateTime(required=True,
+                              description='The start date of the promotion'),
+    'end_date': fields.DateTime(required=True,
+                              description='The end date of the promotion'),
+    'active': fields.Boolean(required=True,
+                                description='Is the promotion active?')
+})
+
+promotion_model = api.inherit(
+    'PromotionModel', 
+    create_model,
+    {
+        '_id': fields.String(readOnly=True,
+                            description='The unique id assigned internally by service'),
+    }
+)
+
+
+# query string arguments
+promotion_args = reqparse.RequestParser()
+promotion_args.add_argument('title', type=str, required=False, help='List Promotions by title')
+promotion_args.add_argument('promotion_type', type=str, required=False, help='List Promotions by type')
+promotion_args.add_argument('start_date', type=inputs.datetime, required=False, help='List Promotions by type')
+promotion_args.add_argument('end_date', type=inputs.datetime, required=False, help='List Promotions by type')
+promotion_args.add_argument('active', type=inputs.boolean, required=False, help='List Promotions by active status')
+
+
+######################################################################
 # LIST ALL PROMOTIONS
 ######################################################################
 
