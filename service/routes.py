@@ -197,7 +197,6 @@ def create_promotions():
     This endpoint will create a Promotion based the data in the body that is posted
     """
     app.logger.info("Request to create a promotion")
-    check_content_type("application/json")
     promotion = Promotion()
     promotion.deserialize(request.get_json())
     promotion.create()
@@ -214,11 +213,11 @@ def create_promotions():
 @api.route('/promotions/<promotion_id>/activate')
 @api.param('promotion_id', 'The Promotion identifier')
 class ActivateResource(Resource):
-    """ Activate actions on a Promotion """
+    """ Activate actions on a Promotion """ 
+   
     def activate_promotions(self, promotion_id):
+       
         app.logger.info("Request to activate promotion with id: %s", promotion_id)
-
-        check_content_type("application/json")
 
         promotion = Promotion.find(promotion_id)
         if not promotion:
@@ -226,7 +225,7 @@ class ActivateResource(Resource):
         promotion.active = True
         promotion.update()
 
-        app.logger.info("Promotion with ID [%s] updated.", promotion.id)
+        app.logger.info("Promotion with ID [%s] has been activated!", promotion.id)
         return promotion.serialize(), status.HTTP_200_OK
 
 
@@ -239,12 +238,10 @@ class ActivateResource(Resource):
 @api.param('promotion_id', 'The Promotion identifier')
 class DeactivateResource(Resource):
     """ Deactivate actions on a Promotion """
+
     def deactivate_promotions(self,promotion_id):
-        
         app.logger.info(
             "Request to deactivate promotion with id: %s", promotion_id)
-
-        check_content_type("application/json")
 
         promotion = Promotion.find(promotion_id)
         if not promotion:
@@ -252,7 +249,7 @@ class DeactivateResource(Resource):
         promotion.active = False
         promotion.update()
 
-        app.logger.info("Promotion with ID [%s] updated.", promotion.id)
+        app.logger.info("Promotion with ID [%s] has been deactivated!", promotion.id)
         return promotion.serialize(), status.HTTP_200_OK
 
 ######################################################################
