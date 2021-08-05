@@ -13,8 +13,11 @@ PUT /promotions/{id}/deactivate - deactivates a Promotion with a given id number
 
 import os
 import sys
+import uuid
 import logging
+from functools import wraps
 from flask import Flask, jsonify, request, url_for, make_response, abort
+from flask_restx import Api, Resource, fields, reqparse, inputs
 from . import status  # HTTP Status Codes
 from werkzeug.exceptions import NotFound
 
@@ -79,7 +82,6 @@ promotion_model = api.inherit(
 promotion_args = reqparse.RequestParser()
 promotion_args.add_argument('title', type=str, required=False, help='List Promotions by title')
 promotion_args.add_argument('promotion_type', type=str, required=False, help='List Promotions by type')
-promotion_args.add_argument('start_date', type=inputs.datetime, required=False, help='List Promotions by type')
 promotion_args.add_argument('end_date', type=inputs.datetime, required=False, help='List Promotions by type')
 promotion_args.add_argument('active', type=inputs.boolean, required=False, help='List Promotions by active status')
 
