@@ -54,7 +54,7 @@ api = Api(app,
 
 
 # Define the model so that the docs reflect what can be sent
-create_model = api.model('Pet', {
+create_model = api.model('Promotion', {
     'title': fields.String(required=True,
                           description='The name of the Promotion'),
     'promotion_type': fields.String(required=True,
@@ -71,7 +71,7 @@ promotion_model = api.inherit(
     'PromotionModel', 
     create_model,
     {
-        '_id': fields.String(readOnly=True,
+        'id': fields.String(readOnly=True,
                             description='The unique id assigned internally by service'),
     }
 )
