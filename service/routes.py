@@ -208,57 +208,54 @@ def create_promotions():
         jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
     )
 
+######################################################################
+#  PATH: /promotions/{id}/activate
+######################################################################
+@api.route('/promotions/<promotion_id>/activate')
+@api.param('promotion_id', 'The Promotion identifier')
+class ActivateResource(Resource):
+    """ Activate actions on a Promotion """
+    def activate_promotions(self, promotion_id):
+        app.logger.info("Request to activate promotion with id: %s", promotion_id)
+
+        check_content_type("application/json")
+
+        promotion = Promotion.find(promotion_id)
+        if not promotion:
+            raise NotFound(
+                "Promotion with id '{}' was not found.".format(promotion_id))
+        promotion.active = True
+        promotion.update()
+
+        app.logger.info("Promotion with ID [%s] updated.", promotion.id)
+        return make_response(jsonify(promotion.serialize()), status.HTTP_200_OK)
+
+
+
 
 ######################################################################
-# ACTIVATE AN EXISTING PROMOTION
+#  PATH: /promotions/{id}/deactivate
 ######################################################################
+@api.route('/promotions/<promotion_id>/deactivate')
+@api.param('promotion_id', 'The Promotion identifier')
+class DeactivateResource(Resource):
+    """ Deactivate actions on a Promotion """
+    def deactivate_promotions(self,promotion_id):
+        
+        app.logger.info(
+            "Request to deactivate promotion with id: %s", promotion_id)
 
+        check_content_type("application/json")
 
-@app.route("/promotions/<int:promotion_id>/activate", methods=["PUT"])
-def activate_promotions(promotion_id):
-    """
-    Activate a Promotion
-    This endpoint will activate a Promotion based on the id specified in the path
-    """
-    app.logger.info("Request to activate promotion with id: %s", promotion_id)
+        promotion = Promotion.find(promotion_id)
+        if not promotion:
+            raise NotFound(
+                "Promotion with id '{}' was not found.".format(promotion_id))
+        promotion.active = False
+        promotion.update()
 
-    check_content_type("application/json")
-
-    promotion = Promotion.find(promotion_id)
-    if not promotion:
-        raise NotFound(
-            "Promotion with id '{}' was not found.".format(promotion_id))
-    promotion.active = True
-    promotion.update()
-
-    app.logger.info("Promotion with ID [%s] updated.", promotion.id)
-    return make_response(jsonify(promotion.serialize()), status.HTTP_200_OK)
-
-######################################################################
-# DEACTIVATE AN EXISTING PROMOTION
-######################################################################
-
-
-@app.route("/promotions/<int:promotion_id>/deactivate", methods=["PUT"])
-def deactivate_promotions(promotion_id):
-    """
-    Deactivate a Promotion
-    This endpoint will deactivate a Promotion based on the id specified in the path
-    """
-    app.logger.info(
-        "Request to deactivate promotion with id: %s", promotion_id)
-
-    check_content_type("application/json")
-
-    promotion = Promotion.find(promotion_id)
-    if not promotion:
-        raise NotFound(
-            "Promotion with id '{}' was not found.".format(promotion_id))
-    promotion.active = False
-    promotion.update()
-
-    app.logger.info("Promotion with ID [%s] updated.", promotion.id)
-    return make_response(jsonify(promotion.serialize()), status.HTTP_200_OK)
+        app.logger.info("Promotion with ID [%s] updated.", promotion.id)
+        return make_response(jsonify(promotion.serialize()), status.HTTP_200_OK)
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
