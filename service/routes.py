@@ -216,10 +216,10 @@ class ActivateResource(Resource):
     """ Activate actions on a Promotion """ 
     @api.doc('activate_promotions')
     @api.response(404, 'Promotion not found')
+    @api.marshal_with(promotion_model,code=200)
     def activate_promotions(self, promotion_id):
        
         app.logger.info("Request to activate promotion with id: %s", promotion_id)
-
         promotion = Promotion.find(promotion_id)
         if not promotion:
             abort(status.HTTP_404_NOT_FOUND, 'Promotion with id [{}] was not found.'.format(promotion_id))
@@ -241,10 +241,10 @@ class DeactivateResource(Resource):
     """ Deactivate actions on a Promotion """
     @api.doc('deactivate_promotions')
     @api.response(404, 'Promotion not found')
+    @api.marshal_with(promotion_model,code=200)
     def deactivate_promotions(self,promotion_id):
         app.logger.info(
             "Request to deactivate promotion with id: %s", promotion_id)
-
 
         promotion = Promotion.find(promotion_id)
         if not promotion:
