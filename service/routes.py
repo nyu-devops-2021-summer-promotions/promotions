@@ -49,7 +49,6 @@ api = Api(app,
           default='promotions',
           default_label='Promotion operations',
           doc='/apidocs', # default also could use doc='/apidocs/'
-          authorizations=authorizations,
           prefix='/api'
          )
 
