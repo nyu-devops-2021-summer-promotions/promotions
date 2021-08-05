@@ -222,13 +222,12 @@ class ActivateResource(Resource):
 
         promotion = Promotion.find(promotion_id)
         if not promotion:
-            raise NotFound(
-                "Promotion with id '{}' was not found.".format(promotion_id))
+            abort(status.HTTP_404_NOT_FOUND, 'Promotion with id [{}] was not found.'.format(promotion_id))
         promotion.active = True
         promotion.update()
 
         app.logger.info("Promotion with ID [%s] updated.", promotion.id)
-        return make_response(jsonify(promotion.serialize()), status.HTTP_200_OK)
+        return promotion.serialize(), status.HTTP_200_OK
 
 
 
@@ -249,13 +248,12 @@ class DeactivateResource(Resource):
 
         promotion = Promotion.find(promotion_id)
         if not promotion:
-            raise NotFound(
-                "Promotion with id '{}' was not found.".format(promotion_id))
+            abort(status.HTTP_404_NOT_FOUND, 'Promotion with id [{}] was not found.'.format(promotion_id))
         promotion.active = False
         promotion.update()
 
         app.logger.info("Promotion with ID [%s] updated.", promotion.id)
-        return make_response(jsonify(promotion.serialize()), status.HTTP_200_OK)
+        return promotion.serialize(), status.HTTP_200_OK
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
