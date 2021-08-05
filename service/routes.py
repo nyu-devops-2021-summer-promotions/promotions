@@ -18,8 +18,9 @@ import logging
 from functools import wraps
 from flask import Flask, jsonify, request, url_for, make_response, abort
 from flask_restx import Api, Resource, fields, reqparse, inputs
-from . import status  # HTTP Status Codes
 from werkzeug.exceptions import NotFound
+from . import status  # HTTP Status Codes
+
 
 # For this example we'll use SQLAlchemy, a popular ORM that supports a
 # variety of backends including SQLite, MySQL, and PostgreSQL
@@ -49,7 +50,6 @@ api = Api(app,
           default='promotions',
           default_label='Promotion operations',
           doc='/apidocs', # default also could use doc='/apidocs/'
-          prefix='/api'
          )
 
 
@@ -84,6 +84,76 @@ promotion_args.add_argument('promotion_type', type=str, required=False, help='Li
 promotion_args.add_argument('end_date', type=inputs.datetime, required=False, help='List Promotions by type')
 promotion_args.add_argument('active', type=inputs.boolean, required=False, help='List Promotions by active status')
 
+######################################################################
+# PATH: /promotions/{id}
+######################################################################
+@api.route('/promotions/<promotion_id>')
+@api.param('promotion_id', 'The Promotion identifier')
+class PromotionResource(Resource):
+    """
+    PromotionResource Class
+    
+    Allows manipulation of a single Promotion with id
+    GET /promotion{id} - Returns promotion with given id
+    PUT /promotion{id} - Update promotion with given id
+    DELETE /promotion{id} - Delete promotion with given id
+    """
+    ######################################################################
+    # RETRIEVE A PROMOTION
+    ######################################################################
+    @api.marshal_with(promotion_model)
+    def get(self, promotion_id):
+        """
+        Retrieve a single Promotion
+        This endpoint will return a Promotion based on it's id
+        """
+        app.logger.info("Request for promotion with id: [%s]", promotion_id)
+        promotion = Promotion.find(promotion_id)
+        if not promotion:
+            raise NotFound(
+                "Promotion with id '{}' was not found.".format(promotion_id))        
+        return promotion.serialize(), status.HTTP_200_OK
+
+    ######################################################################
+    # UPDATE AN EXISTING PROMOTION
+    ######################################################################
+    @api.marshal_with(promotion_model)
+    def put(self, promotion_id):
+        """
+        Update a Promotion
+        This endpoint will update a Promotion based the body that is posted
+        """
+        app.logger.info("Request to update promotion with id: [%s]", promotion_id)
+        # check_content_type("application/json")
+        promotion = Promotion.find(promotion_id)
+        if not promotion:
+            raise NotFound(
+                "Promotion with id '{}' was not found.".format(promotion_id))
+        app.logger.debug('Payload = %s', api.payload)
+        data = api.payload
+        promotion.deserialize(data)
+        promotion.id = promotion_id
+        promotion.update()
+
+        app.logger.info("Promotion with ID [%s] updated.", promotion.id)
+        return promotion.serialize(), status.HTTP_200_OK
+
+    ######################################################################
+    # DELETE A PROMOTION
+    ######################################################################
+    @api.response(204, 'Pet deleted')
+    def delete(self, promotion_id):
+        """
+        Delete a Promotion
+        This endpoint will delete a Promotion based the id specified in the path
+        """
+        app.logger.info("Request to delete promotion with id: [%s]", promotion_id)
+        promotion = Promotion.find(promotion_id)
+        if promotion:
+            promotion.delete()
+            app.logger.info("Promotion with ID [%s] delete complete.", promotion_id)
+        return '', status.HTTP_204_NO_CONTENT
+
 
 ######################################################################
 # LIST ALL PROMOTIONS
@@ -114,23 +184,6 @@ def list_promotions():
     results = [promotion.serialize() for promotion in promotions]
     return make_response(jsonify(results), status.HTTP_200_OK)
 
-######################################################################
-# RETRIEVE A PROMOTION
-######################################################################
-
-
-@app.route("/promotions/<int:promotion_id>", methods=["GET"])
-def get_promotions(promotion_id):
-    """
-    Retrieve a single Promotion
-    This endpoint will return a Promotion based on it's id
-    """
-    app.logger.info("Request for promotion with id: %s", promotion_id)
-    promotion = Promotion.find(promotion_id)
-    if not promotion:
-        raise NotFound(
-            "Promotion with id '{}' was not found.".format(promotion_id))
-    return make_response(jsonify(promotion.serialize()), status.HTTP_200_OK)
 
 ######################################################################
 # ADD A NEW PROMOTION
@@ -149,54 +202,12 @@ def create_promotions():
     promotion.deserialize(request.get_json())
     promotion.create()
     message = promotion.serialize()
-    location_url = url_for(
-        "get_promotions", promotion_id=promotion.id, _external=True)
+    location_url = api.url_for(
+        PromotionResource, promotion_id=promotion.id, _external=True)
     return make_response(
         jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
     )
 
-######################################################################
-# UPDATE AN EXISTING PROMOTION
-######################################################################
-
-
-@app.route("/promotions/<int:promotion_id>", methods=["PUT"])
-def update_promotions(promotion_id):
-    """
-    Update a Promotion
-    This endpoint will update a Promotion based the body that is posted
-    """
-    app.logger.info("Request to update promotion with id: %s", promotion_id)
-    check_content_type("application/json")
-    promotion = Promotion.find(promotion_id)
-    if not promotion:
-        raise NotFound(
-            "Promotion with id '{}' was not found.".format(promotion_id))
-    promotion.deserialize(request.get_json())
-    promotion.id = promotion_id
-    promotion.update()
-
-    app.logger.info("Promotion with ID [%s] updated.", promotion.id)
-    return make_response(jsonify(promotion.serialize()), status.HTTP_200_OK)
-
-######################################################################
-# DELETE A PROMOTION
-######################################################################
-
-
-@app.route("/promotions/<int:promotion_id>", methods=["DELETE"])
-def delete_promotions(promotion_id):
-    """
-    Delete a Promotion
-    This endpoint will delete a Promotion based the id specified in the path
-    """
-    app.logger.info("Request to delete promotion with id: %s", promotion_id)
-    promotion = Promotion.find(promotion_id)
-    if promotion:
-        promotion.delete()
-
-    app.logger.info("Promotion with ID [%s] delete complete.", promotion_id)
-    return make_response("", status.HTTP_204_NO_CONTENT)
 
 ######################################################################
 # ACTIVATE AN EXISTING PROMOTION
