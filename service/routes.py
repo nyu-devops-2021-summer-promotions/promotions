@@ -200,7 +200,6 @@ class PetCollection(Resource):
 # ADD A NEW PROMOTION
 ######################################################################
 
-
     @api.doc('create_promotions')
     @api.response(400, 'The posted data was not valid')
     @api.expect(create_model)
