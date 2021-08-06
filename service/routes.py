@@ -79,10 +79,10 @@ promotion_model = api.inherit(
 
 # query string arguments
 promotion_args = reqparse.RequestParser()
-promotion_args.add_argument('title', type=str, required=False, help='List Promotions by title')
-promotion_args.add_argument('promotion_type', type=str, required=False, help='List Promotions by type')
-promotion_args.add_argument('end_date', type=str, required=False, help='List Promotions by type')
-promotion_args.add_argument('active', type=inputs.boolean, required=False, help='List Promotions by active status')
+promotion_args.add_argument('title', type=str, required=False, location='args', help='List Promotions by title')
+promotion_args.add_argument('promotion_type', type=str, required=False,location='args', help='List Promotions by type')
+promotion_args.add_argument('end_date', type=str, required=False,location='args', help='List Promotions by type')
+promotion_args.add_argument('active', type=bool, required=False,location='args', help='List Promotions by active status')
 
 ######################################################################
 # PATH: /promotions/{id}
@@ -174,20 +174,22 @@ class PromotionCollection(Resource):
         """ Returns all of the Promotions """
         app.logger.info("Request for promotion list")
         promotions = []
-        promotion_type = request.args.get("promotion_type")
-        active = request.args.get("active")
-        title = request.args.get("title")
-        end_date = request.args.get("end_date")
-
-        if promotion_type:
-            promotions = Promotion.find_by_promotiontype(promotion_type)
-        elif active:
-            promotions = Promotion.find_by_active(active)
-        elif title:
-            promotions = Promotion.find_by_title(title)
-        elif end_date:
-            promotions = Promotion.find_by_end_date(end_date)
+        args = promotion_args.parse_args()
+        
+        if args['promotion_type']:
+            app.logger.info('Filtering by promotion type: %s', args['promotion_type'])
+            promotions = Promotion.find_by_promotiontype(args['promotion_type'])
+        elif args['active'] is not None:
+            app.logger.info('Filtering by active: %s', args['active'])
+            promotions = Promotion.find_by_active(args['active'])
+        elif args['title']:
+            app.logger.info('Filtering by title: %s', args['title'])
+            promotions = Promotion.find_by_title(args['title'])
+        elif args['end_date']:
+            app.logger.info('Filtering by end date: %s', args['end_date'])
+            promotions = Promotion.find_by_end_date(args['end_date'])
         else:
+            app.logger.info('Returning unfiltered list.')
             promotions = Promotion.all()
 
         
