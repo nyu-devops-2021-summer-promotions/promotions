@@ -81,7 +81,7 @@ promotion_model = api.inherit(
 promotion_args = reqparse.RequestParser()
 promotion_args.add_argument('title', type=str, required=False, help='List Promotions by title')
 promotion_args.add_argument('promotion_type', type=str, required=False, help='List Promotions by type')
-promotion_args.add_argument('end_date', type=inputs.datetime, required=False, help='List Promotions by type')
+promotion_args.add_argument('end_date', type=str, required=False, help='List Promotions by type')
 promotion_args.add_argument('active', type=inputs.boolean, required=False, help='List Promotions by active status')
 
 ######################################################################
@@ -159,33 +159,41 @@ class PromotionResource(Resource):
 
 
 ######################################################################
+#  PATH: /promotions
+######################################################################
+@api.route('/promotions', strict_slashes=False)
+class PetCollection(Resource):
+######################################################################
 # LIST ALL PROMOTIONS
 ######################################################################
 
+    @api.doc('list_promotions')
+    @api.expect(promotion_args, validate=True)
+    @api.marshal_list_with(promotion_model)
+    def get(self):
+        """ Returns all of the Promotions """
+        app.logger.info("Request for promotion list")
+        promotions = []
+        promotion_type = request.args.get("promotion_type")
+        active = request.args.get("active")
+        title = request.args.get("title")
+        end_date = request.args.get("end_date")
 
-@app.route("/promotions", methods=["GET"])
-def list_promotions():
-    """ Returns all of the Promotions """
-    app.logger.info("Request for promotion list")
-    promotions = []
-    promotion_type = request.args.get("promotion_type")
-    active = request.args.get("active")
-    title = request.args.get("title")
-    end_date = request.args.get("end_date")
+        if promotion_type:
+            promotions = Promotion.find_by_promotiontype(promotion_type)
+        elif active:
+            promotions = Promotion.find_by_active(active)
+        elif title:
+            promotions = Promotion.find_by_title(title)
+        elif end_date:
+            promotions = Promotion.find_by_end_date(end_date)
+        else:
+            promotions = Promotion.all()
 
-    if promotion_type:
-        promotions = Promotion.find_by_promotiontype(promotion_type)
-    elif active:
-        promotions = Promotion.find_by_active(active)
-    elif title:
-        promotions = Promotion.find_by_title(title)
-    elif end_date:
-        promotions = Promotion.find_by_end_date(end_date)
-    else:
-        promotions = Promotion.all()
-
-    results = [promotion.serialize() for promotion in promotions]
-    return make_response(jsonify(results), status.HTTP_200_OK)
+        
+        results = [promotion.serialize() for promotion in promotions]
+        app.logger.info('[%s] Promotions returned', len(results))
+        return results, status.HTTP_200_OK
 
 
 ######################################################################
@@ -193,23 +201,24 @@ def list_promotions():
 ######################################################################
 
 
-@app.route("/promotions", methods=["POST"])
-def create_promotions():
-    """
-    Creates a Promotion
-    This endpoint will create a Promotion based the data in the body that is posted
-    """
-    app.logger.info("Request to create a promotion")
-    check_content_type("application/json")
-    promotion = Promotion()
-    promotion.deserialize(request.get_json())
-    promotion.create()
-    message = promotion.serialize()
-    location_url = api.url_for(
-        PromotionResource, promotion_id=promotion.id, _external=True)
-    return make_response(
-        jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
-    )
+    @api.doc('create_promotions')
+    @api.response(400, 'The posted data was not valid')
+    @api.expect(create_model)
+    @api.marshal_with(promotion_model, code=201)
+    def post(self):
+        """
+        Creates a Promotion
+        This endpoint will create a Promotion based the data in the body that is posted
+        """
+        app.logger.info("Request to create a promotion")
+        promotion = Promotion()
+        check_content_type("application/json")
+        app.logger.debug('Payload = %s', api.payload)
+        promotion.deserialize(api.payload)
+        promotion.create()
+        app.logger.info('Promotion with new id [%s] created!', promotion.id)
+        location_url = api.url_for(PromotionResource, promotion_id=promotion.id, _external=True)
+        return promotion.serialize(), status.HTTP_201_CREATED, {'Location': location_url}
 
 ######################################################################
 #  PATH: /promotions/{id}/activate
@@ -227,7 +236,8 @@ class ActivateResource(Resource):
         check_content_type("application/json")
         promotion = Promotion.find(promotion_id)
         if not promotion:
-            abort(status.HTTP_404_NOT_FOUND, 'Promotion with id [{}] was not found.'.format(promotion_id))
+            raise NotFound(
+            "Promotion with id '{}' was not found.".format(promotion_id))
         promotion.active = True
         promotion.update()
 
@@ -253,7 +263,8 @@ class DeactivateResource(Resource):
         check_content_type("application/json")
         promotion = Promotion.find(promotion_id)
         if not promotion:
-            abort(status.HTTP_404_NOT_FOUND, 'Promotion with id [{}] was not found.'.format(promotion_id))
+            raise NotFound(
+            "Promotion with id '{}' was not found.".format(promotion_id))
         promotion.active = False
         promotion.update()
 
