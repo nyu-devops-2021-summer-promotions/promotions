@@ -170,7 +170,7 @@ class PromotionCollection(Resource):
     # LIST ALL PROMOTIONS
     ######################################################################
     @api.doc('list_promotions')
-    @api.expect(promotion_args, validate=True)
+    @api.expect(promotion_args)
     @api.marshal_list_with(promotion_model)
     def get(self):
         """ Returns all of the Promotions """
