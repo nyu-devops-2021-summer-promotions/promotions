@@ -162,7 +162,7 @@ class PromotionResource(Resource):
 #  PATH: /promotions
 ######################################################################
 @api.route('/promotions', strict_slashes=False)
-class PetCollection(Resource):
+class PromotionCollection(Resource):
 ######################################################################
 # LIST ALL PROMOTIONS
 ######################################################################
