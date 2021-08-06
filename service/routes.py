@@ -144,7 +144,7 @@ class PromotionResource(Resource):
     # DELETE A PROMOTION
     ######################################################################
     @api.doc('delete_promotions')
-    @api.response(204, 'Pet deleted')
+    @api.response(204, 'Promotion deleted')
     def delete(self, promotion_id):
         """
         Delete a Promotion
