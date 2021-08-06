@@ -214,10 +214,10 @@ def create_promotions():
 @api.param('promotion_id', 'The Promotion identifier')
 class ActivateResource(Resource):
     """ Activate actions on a Promotion """ 
-    @api.doc('activate_promotions')
     @api.response(404, 'Promotion not found')
     @api.marshal_with(promotion_model)
-    def activate_promotions(self, promotion_id):
+    @api.doc('activate_promotions')
+    def put(self, promotion_id):
        
         app.logger.info("Request to activate promotion with id: %s", promotion_id)
         promotion = Promotion.find(promotion_id)
@@ -239,10 +239,10 @@ class ActivateResource(Resource):
 @api.param('promotion_id', 'The Promotion identifier')
 class DeactivateResource(Resource):
     """ Deactivate actions on a Promotion """
-    @api.doc('deactivate_promotions')
     @api.response(404, 'Promotion not found')
     @api.marshal_with(promotion_model)
-    def deactivate_promotions(self,promotion_id):
+    @api.doc('deactivate_promotions')
+    def put(self, promotion_id):
         app.logger.info(
             "Request to deactivate promotion with id: %s", promotion_id)
 
