@@ -213,6 +213,8 @@ class PetCollection(Resource):
         promotion = Promotion()
         check_content_type("application/json")
         app.logger.debug('Payload = %s', api.payload)
+        if not api.payload:
+            abort(status.HTTP_400_BAD_REQUEST, 'Bad Request')
         promotion.deserialize(api.payload)
         promotion.create()
         app.logger.info('Promotion with new id [%s] created!', promotion.id)
