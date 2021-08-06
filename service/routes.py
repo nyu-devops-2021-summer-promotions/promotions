@@ -220,6 +220,7 @@ class ActivateResource(Resource):
     def put(self, promotion_id):
        
         app.logger.info("Request to activate promotion with id: %s", promotion_id)
+        check_content_type("application/json")
         promotion = Promotion.find(promotion_id)
         if not promotion:
             abort(status.HTTP_404_NOT_FOUND, 'Promotion with id [{}] was not found.'.format(promotion_id))
@@ -245,7 +246,7 @@ class DeactivateResource(Resource):
     def put(self, promotion_id):
         app.logger.info(
             "Request to deactivate promotion with id: %s", promotion_id)
-
+        check_content_type("application/json")
         promotion = Promotion.find(promotion_id)
         if not promotion:
             abort(status.HTTP_404_NOT_FOUND, 'Promotion with id [{}] was not found.'.format(promotion_id))
