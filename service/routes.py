@@ -118,7 +118,10 @@ class PromotionResource(Resource):
     ######################################################################
     # UPDATE AN EXISTING PROMOTION
     ######################################################################
+    @api.response(404, 'Promotion not found')
+    @api.response(400, 'The posted Promotion data was not valid')
     @api.doc('update_promotions')
+    @api.expect(promotion_model)
     @api.marshal_with(promotion_model)
     def put(self, promotion_id):
         """
@@ -236,7 +239,7 @@ class ActivateResource(Resource):
     def put(self, promotion_id):
        
         app.logger.info("Request to activate promotion with id: %s", promotion_id)
-        check_content_type("application/json")
+        # check_content_type("application/json")
         promotion = Promotion.find(promotion_id)
         if not promotion:
             raise NotFound(
@@ -263,7 +266,7 @@ class DeactivateResource(Resource):
     def put(self, promotion_id):
         app.logger.info(
             "Request to deactivate promotion with id: %s", promotion_id)
-        check_content_type("application/json")
+        # check_content_type("application/json")
         promotion = Promotion.find(promotion_id)
         if not promotion:
             raise NotFound(
