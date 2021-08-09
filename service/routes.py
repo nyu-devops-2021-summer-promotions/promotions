@@ -81,7 +81,7 @@ promotion_model = api.inherit(
 promotion_args = reqparse.RequestParser()
 promotion_args.add_argument('title', type=str, required=False, location='args', help='List Promotions by title')
 promotion_args.add_argument('promotion_type', type=str, required=False,location='args', help='List Promotions by type')
-promotion_args.add_argument('end_date', type=str, required=False,location='args', help='List Promotions by type')
+promotion_args.add_argument('end_date', type=inputs.datetime_from_iso8601, required=False,location='args', help='List Promotions by type')
 promotion_args.add_argument('active', type=inputs.boolean, required=False,location='args', help='List Promotions by active status')
 
 ######################################################################
