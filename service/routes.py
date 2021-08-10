@@ -102,6 +102,7 @@ class PromotionResource(Resource):
     # RETRIEVE A PROMOTION
     ######################################################################
     @api.doc('get_promotions')
+    @api.response(404, 'Promotion not found')
     @api.marshal_with(promotion_model)
     def get(self, promotion_id):
         """
