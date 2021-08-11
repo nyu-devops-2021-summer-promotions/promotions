@@ -81,7 +81,7 @@ promotion_model = api.inherit(
 promotion_args = reqparse.RequestParser()
 promotion_args.add_argument('title', type=str, required=False, location='args', help='List Promotions by title')
 promotion_args.add_argument('promotion_type', type=str, required=False,location='args', help='List Promotions by type')
-promotion_args.add_argument('end_date', type=inputs.datetime_from_iso8601, required=False,location='args', help='List Promotions by type')
+promotion_args.add_argument('end_date', type=inputs.datetime_from_iso8601, required=False,location='args', help='List Promotions by end date')
 promotion_args.add_argument('active', type=inputs.boolean, required=False,location='args', help='List Promotions by active status')
 
 
@@ -126,7 +126,7 @@ class PromotionResource(Resource):
     @api.response(400, 'The posted Promotion data was not valid')
     @api.response(415, 'Invalid Content Type')
     @api.doc('update_promotions')
-    @api.expect(promotion_model)
+    @api.expect(create_model)
     @api.marshal_with(promotion_model)
     def put(self, promotion_id):
         """
