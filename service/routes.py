@@ -124,6 +124,7 @@ class PromotionResource(Resource):
     ######################################################################
     @api.response(404, 'Promotion not found')
     @api.response(400, 'The posted Promotion data was not valid')
+    @api.response(415, 'Invalid Content Type')
     @api.doc('update_promotions')
     @api.expect(promotion_model)
     @api.marshal_with(promotion_model)
@@ -140,12 +141,15 @@ class PromotionResource(Resource):
                 "Promotion with id '{}' was not found.".format(promotion_id))
         app.logger.debug('Payload = %s', api.payload)
         data = api.payload
-        promotion.deserialize(data)
-        promotion.id = promotion_id
-        promotion.update()
+        try:
+            promotion.deserialize(data)
+            promotion.id = promotion_id
+            promotion.update()
 
-        app.logger.info("Promotion with ID [%s] updated.", promotion.id)
-        return promotion.serialize(), status.HTTP_200_OK
+            app.logger.info("Promotion with ID [%s] updated.", promotion.id)
+            return promotion.serialize(), status.HTTP_200_OK
+        except Exception:
+            api.abort(status.HTTP_400_BAD_REQUEST, 'Bad Request')
 
     ######################################################################
     # DELETE A PROMOTION
