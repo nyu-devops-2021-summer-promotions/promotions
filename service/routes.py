@@ -84,6 +84,25 @@ promotion_args.add_argument('promotion_type', type=str, required=False,location=
 promotion_args.add_argument('end_date', type=inputs.datetime_from_iso8601, required=False,location='args', help='List Promotions by type')
 promotion_args.add_argument('active', type=inputs.boolean, required=False,location='args', help='List Promotions by active status')
 
+
+@app.errorhandler(status.HTTP_500_INTERNAL_SERVER_ERROR)
+def internal_server_error(error):
+    """ Handles unexpected server error with 500_SERVER_ERROR """
+    message = str(error)
+    app.logger.error(message)
+    return (
+        jsonify(
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            error="Internal Server Error",
+            message=message,
+        ),
+        status.HTTP_500_INTERNAL_SERVER_ERROR,
+    )
+@app.errorhandler(DataValidationError)
+def request_validation_error(error):
+    """ Handles Value Errors from bad data """
+    return bad_request(error)
+
 ######################################################################
 # PATH: /promotions/{id}
 ######################################################################
@@ -208,7 +227,8 @@ class PromotionCollection(Resource):
 
     @api.doc('create_promotions')
     @api.response(400, 'The posted data was not valid')
-    @api.expect(create_model)
+    @api.response(415, 'Invalid Content Type')
+    @api.expect(promotion_model)
     @api.marshal_with(promotion_model, code=201)
     def post(self):
         """
@@ -219,13 +239,22 @@ class PromotionCollection(Resource):
         promotion = Promotion()
         check_content_type("application/json")
         app.logger.debug('Payload = %s', api.payload)
-        if not api.payload:
-            abort(status.HTTP_400_BAD_REQUEST, 'Bad Request')
-        promotion.deserialize(api.payload)
-        promotion.create()
-        app.logger.info('Promotion with new id [%s] created!', promotion.id)
-        location_url = api.url_for(PromotionResource, promotion_id=promotion.id, _external=True)
-        return promotion.serialize(), status.HTTP_201_CREATED, {'Location': location_url}
+        # if not api.payload:
+        #     abort(status.HTTP_400_BAD_REQUEST, 'Bad Request')
+        try:
+            promotion.deserialize(api.payload)
+            if promotion.title and promotion.promotion_type and promotion.start_date and promotion.end_date:
+                promotion.create()
+            app.logger.info('Promotion with new id [%s] created!', promotion.id)
+            location_url = api.url_for(PromotionResource, promotion_id=promotion.id, _external=True)
+            return promotion.serialize(), status.HTTP_201_CREATED, {'Location': location_url}
+        except Exception:
+            api.abort(status.HTTP_400_BAD_REQUEST, 'Bad Request')
+        
+            
+
+        
+        
 
 ######################################################################
 #  PATH: /promotions/{id}/activate
