@@ -135,7 +135,11 @@ class Promotion(db.Model):
     def find(cls, promotion_id):
         """ Finds a Promotion by it's ID """
         logger.info("Processing lookup for id %s ...", promotion_id)
-        return cls.query.get(promotion_id)
+        try:
+            val=int(promotion_id)
+            return cls.query.get(promotion_id)
+        except Exception:
+            return('Bad Request')
 
     @classmethod
     def find_or_404(cls, promotion_id):

@@ -71,7 +71,7 @@ promotion_model = api.inherit(
     'PromotionModel', 
     create_model,
     {
-        'id': fields.String(readOnly=True,
+        'id': fields.Integer(readOnly=True, required=True,
                             description='The unique id assigned internally by service'),
     }
 )
@@ -140,12 +140,17 @@ class PromotionResource(Resource):
                 "Promotion with id '{}' was not found.".format(promotion_id))
         app.logger.debug('Payload = %s', api.payload)
         data = api.payload
-        promotion.deserialize(data)
-        promotion.id = promotion_id
-        promotion.update()
+        
+        try:
+            promotion.deserialize(data)
+            promotion.id = promotion_id
+            
+            promotion.update()
 
-        app.logger.info("Promotion with ID [%s] updated.", promotion.id)
-        return promotion.serialize(), status.HTTP_200_OK
+            app.logger.info("Promotion with ID [%s] updated.", promotion.id)
+            return promotion.serialize(), status.HTTP_200_OK
+        except Exception:
+            api.abort(status.HTTP_400_BAD_REQUEST, 'Bad Request')
 
     ######################################################################
     # DELETE A PROMOTION
@@ -180,6 +185,7 @@ class PromotionCollection(Resource):
     def get(self):
         """ Returns all of the Promotions """
         app.logger.info("Request for promotion list")
+        
         promotions = []
         args = promotion_args.parse_args()
         
@@ -198,7 +204,8 @@ class PromotionCollection(Resource):
         else:
             app.logger.info('Returning unfiltered list.')
             promotions = Promotion.all()
-
+            
+        
         
         results = [promotion.serialize() for promotion in promotions]
         app.logger.info('[%s] Promotions returned', len(results))
@@ -209,10 +216,9 @@ class PromotionCollection(Resource):
 # ADD A NEW PROMOTION
 ######################################################################
 
-    @api.doc('create_promotions')
     @api.response(400, 'The posted data was not valid')
     @api.response(415, 'Invalid Content Type')
-    @api.expect(promotion_model)
+    @api.expect(create_model)
     @api.marshal_with(promotion_model, code=201)
     def post(self):
         """
@@ -248,22 +254,28 @@ class PromotionCollection(Resource):
 class ActivateResource(Resource):
     """ Activate actions on a Promotion """ 
     @api.response(404, 'Promotion not found')
+    @api.response(400, 'The posted Promotion data was not valid')
+    @api.expect(promotion_model)
     @api.marshal_with(promotion_model)
     @api.doc('activate_promotions')
     def put(self, promotion_id):
        
         app.logger.info("Request to activate promotion with id: %s", promotion_id)
         # check_content_type("application/json")
-        promotion = Promotion.find(promotion_id)
-        if not promotion:
+        try:
+            val=int(promotion_id)
+            promotion = Promotion.find(promotion_id)
+            promotion.update()
+            promotion.active = True
+            app.logger.info("Promotion with ID [%s] has been activated!", promotion.id)
+            return promotion.serialize(), status.HTTP_200_OK
+        except Exception:
             raise NotFound(
             "Promotion with id '{}' was not found.".format(promotion_id))
-        promotion.active = True
-        promotion.update()
-
-        app.logger.info("Promotion with ID [%s] has been activated!", promotion.id)
-        return promotion.serialize(), status.HTTP_200_OK
-
+        
+            
+        
+        
 
 
 
@@ -280,17 +292,16 @@ class DeactivateResource(Resource):
     def put(self, promotion_id):
         app.logger.info(
             "Request to deactivate promotion with id: %s", promotion_id)
-        # check_content_type("application/json")
-        promotion = Promotion.find(promotion_id)
-        if not promotion:
+        try:
+            val=int(promotion_id)
+            promotion = Promotion.find(promotion_id)
+            promotion.update()
+            promotion.active = False
+            app.logger.info("Promotion with ID [%s] has been activated!", promotion.id)
+            return promotion.serialize(), status.HTTP_200_OK
+        except Exception:
             raise NotFound(
             "Promotion with id '{}' was not found.".format(promotion_id))
-        promotion.active = False
-        promotion.update()
-
-        app.logger.info("Promotion with ID [%s] has been deactivated!", promotion.id)
-        return promotion.serialize(), status.HTTP_200_OK
-
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
 ######################################################################
